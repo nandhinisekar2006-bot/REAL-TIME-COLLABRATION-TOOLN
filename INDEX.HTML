@@ -1,0 +1,61 @@
+const express=require('express');
+const http=require('http')
+const{server}=require('socket.io');
+
+const app=express();
+const server=http.createServer(app);
+const io=new server(server);
+
+const port=3000;
+let sharedText='';
+app.get('/',(req,res)=>{res.send(
+<!DOCTYPE html>
+    <html>
+    <head>
+        <title>real-time collaboration</title>
+        <style>
+            body {font-family:arial,sans-serif;padding:20px;background:#eef2f3;}
+            h2 {color:#444;}
+            textarea{
+                width:100%;
+                height:300px;
+                padding:10px;
+                font-family:monospace;
+                font-size:16px;
+                border:1px solid#ccc;
+                border-radius:5px;
+                box-shadow:0 0 5px rgba(0,0,0,0,1);
+            }
+            </style>
+     </head>
+    <body>
+       <h2> real-time collaboration editor-for you</h2>
+           <textarea id="editor" placeholder="start typing..."></textarea>
+           <script src="/socket.io/socket.io.js"></script>
+           <script>
+              const socket=io();
+              const editor=document.getElementById('editor');
+              editor.addEventListener('input',()=>{
+                socket.email('textchange',editor.value);
+              });
+            socket.on('textupdate',(data)=>{
+                if (editor.value !==data)
+            { editor.value=data;}
+            });
+            </script>
+        </body>  
+    </html>
+  );
+    });  
+io.on('connection',(socket)=>{
+    console.log('A user connected');
+    socket.emit('textupdate',sharedtext);
+    socket.on('textchange',(text)=>{sharedtext=text;
+    socket.broadcast.emit('textupdate',text);
+  });
+ socket.on('disconnect',()=>{console.log('A user disconnected');
+  });
+});
+server.listen(port,()=>{
+    console.log('your app is running at http://localhost:\${port}\);
+});
